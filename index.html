@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Shin-chan GTA Adventure</title>
+    <title>Shin-chan GTA Final</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body { margin: 0; overflow: hidden; background: #87CEEB; touch-action: none; font-family: sans-serif; }
         #ad-board { position: absolute; top: 0; width: 100%; height: 45px; background: yellow; text-align: center; line-height: 45px; font-weight: bold; z-index: 100; border-bottom: 3px solid #000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        #controls { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; background: rgba(255,0,0,0.8); border-radius: 50%; z-index: 100; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border: 5px solid white; font-size: 20px; text-shadow: 1px 1px 2px black; }
+        #controls { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; background: rgba(255,0,0,0.8); border-radius: 50%; z-index: 100; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border: 4px solid white; font-size: 20px; }
+        #score-board { position: absolute; top: 60px; left: 10px; color: white; font-weight: bold; font-size: 20px; z-index: 100; text-shadow: 2px 2px #000; }
     </style>
 </head>
 <body>
-    <div id="ad-board">🚀 SHIN-CHAN ADS ZONE - EARN MONEY 🚀</div>
+    <div id="ad-board">💰 MONEY ZONE - SHIN-CHAN GTA 💰</div>
+    <div id="score-board">Coins: 0</div>
     <div id="controls">RUN</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // 1. Scene Setup
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87CEEB); 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -23,62 +24,57 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 2. Roshni (Lights) - Black screen hatane ke liye
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.4);
+        // Lighting
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
         scene.add(hemiLight);
-        const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-        sun.position.set(10, 20, 10);
-        scene.add(sun);
 
-        // 3. Sadak aur Ghaas (Road & Grass)
-        const road = new THREE.Mesh(new THREE.PlaneGeometry(20, 2000), new THREE.MeshStandardMaterial({color: 0x333333}));
+        // Ground & Road
+        const road = new THREE.Mesh(new THREE.PlaneGeometry(15, 2000), new THREE.MeshStandardMaterial({color: 0x333333}));
         road.rotation.x = -Math.PI / 2;
         scene.add(road);
 
-        const grass = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshStandardMaterial({color: 0x228B22}));
-        grass.rotation.x = -Math.PI / 2;
-        grass.position.y = -0.1;
+        const grass = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({color: 0x228B22}));
+        grass.rotation.x = -Math.PI / 2; grass.position.y = -0.1;
         scene.add(grass);
 
-        // 4. Shin-chan Character (3D Model)
-        const shinchan = new THREE.Group();
+        // City Buildings
+        for(let i=0; i<20; i++){
+            const h = 10 + Math.random()*20;
+            const b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), new THREE.MeshStandardMaterial({color: Math.random() * 0xffffff}));
+            b.position.set(i%2==0 ? -15 : 15, h/2, -i*30);
+            scene.add(b);
+        }
+
+        // Shin-chan Model
+        const char = new THREE.Group();
         const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 0.9, 12), new THREE.MeshStandardMaterial({color: 0xFF0000}));
-        body.position.y = 0.9;
+        body.position.y = 0.85;
         const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), new THREE.MeshStandardMaterial({color: 0xFFDBAC}));
         head.position.y = 1.6;
-        const pants = new THREE.Mesh(new THREE.CylinderGeometry(0.51, 0.51, 0.3, 12), new THREE.MeshStandardMaterial({color: 0xFFFF00}));
-        pants.position.y = 0.45;
-        
-        shinchan.add(body, head, pants);
-        scene.add(shinchan);
+        const pants = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.3, 12), new THREE.MeshStandardMaterial({color: 0xFFFF00}));
+        pants.position.y = 0.4;
+        char.add(body, head, pants);
+        scene.add(char);
 
-        // 5. Camera Settings
         camera.position.set(0, 5, 12);
-        camera.lookAt(shinchan.position);
+        camera.lookAt(char.position);
 
-        // 6. Controls (Touch to Run)
-        let isMoving = false;
-        const runBtn = document.getElementById('controls');
-        runBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isMoving = true; });
-        runBtn.addEventListener('touchend', (e) => { e.preventDefault(); isMoving = false; });
+        let move = false;
+        let score = 0;
+        document.getElementById('controls').addEventListener('touchstart', () => move = true);
+        document.getElementById('controls').addEventListener('touchend', () => move = false);
 
-        // 7. Game Loop (Bhagane ke liye)
         function animate() {
             requestAnimationFrame(animate);
-            if(isMoving) {
-                shinchan.position.z -= 0.25; // Speed badha di hai
-                camera.position.z -= 0.25; // Camera piche-piche chalega
+            if(move) {
+                char.position.z -= 0.25;
+                camera.position.z -= 0.25;
+                score += 1;
+                document.getElementById('score-board').innerText = "Coins: " + Math.floor(score/10);
             }
             renderer.render(scene, camera);
         }
         animate();
-
-        // Mobile Screen Resize Fix
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
     </script>
 </body>
 </html>
