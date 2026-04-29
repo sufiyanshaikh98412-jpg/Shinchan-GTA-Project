@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shin-chan 3D Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #87CEEB; }
+        #ad-board { position: absolute; top: 0; width: 100%; height: 50px; background: yellow; text-align: center; line-height: 50px; font-weight: bold; border-bottom: 2px solid black; z-index: 100; }
+    </style>
+</head>
+<body>
+    <div id="ad-board">ADVERTISING BOARD - MONEY ZONE</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshBasicMaterial({color: 0x228B22}));
+        floor.rotation.x = Math.PI / 2;
+        scene.add(floor);
+        const shinchan = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshBasicMaterial({color: 0xFF0000}));
+        shinchan.position.y = 1;
+        scene.add(shinchan);
+        camera.position.z = 5; camera.position.y = 2;
+        function animate() { requestAnimationFrame(animate); shinchan.rotation.y += 0.01; renderer.render(scene, camera); }
+        animate();
+    </script>
+</body>
+</html>
+
